@@ -1,1 +1,47 @@
-name: CI 
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        dir: [client, server]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ${{ matrix.dir }}
+
+      - name: Run linter
+        run: |
+          if [ -f package.json ] && grep -q "\"lint\"" package.json; then
+            npm run lint
+          else
+            echo "No lint script defined"
+          fi
+        working-directory: ${{ matrix.dir }}
+
+      - name: Run tests
+        run: |
+          if [ -f package.json ] && grep -q "\"test\"" package.json; then
+            npm test
+          else
+            echo "No test script defined"
+          fi
+        working-directory: ${{ matrix.dir }}
+
